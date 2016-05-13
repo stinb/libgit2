@@ -620,15 +620,13 @@ GIT_EXTERN(int) git_submodule_reload(git_submodule *submodule, int force);
  * on the `git_submodule_ignore_t` value for the submodule.
  *
  * @param status Combination of `GIT_SUBMODULE_STATUS` flags
- * @param repo the repository in which to look
- * @param name name of the submodule
+ * @param submodule The submodule to update
  * @param ignore the ignore rules to follow
  * @return 0 on success, <0 on error
  */
 GIT_EXTERN(int) git_submodule_status(
 	unsigned int *status,
-	git_repository *repo,
-	const char *name,
+	git_submodule *submodule,
 	git_submodule_ignore_t ignore);
 
 /**
