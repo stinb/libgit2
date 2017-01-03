@@ -568,12 +568,10 @@ void test_config_write__preserves_whitespace_and_comments(void)
 	cl_git_pass(git_futils_readbuffer(&newfile, file_name));
 	n = newfile.ptr;
 
-	cl_assert_equal_strn(SECTION_FOO, n, strlen(SECTION_FOO));
-	n += strlen(SECTION_FOO);
+	cl_assert_equal_strn(SECTION_FOO_WITH_COMMENT, n, strlen(SECTION_FOO_WITH_COMMENT));
+	n += strlen(SECTION_FOO_WITH_COMMENT);
 	cl_assert_equal_strn("\tother = otherval\n", n, strlen("\tother = otherval\n"));
 	n += strlen("\tother = otherval\n");
-	cl_assert_equal_strn(FOO_COMMENT, n, strlen(FOO_COMMENT));
-	n += strlen(FOO_COMMENT);
 
 	cl_assert_equal_strn(SECTION_BAR, n, strlen(SECTION_BAR));
 	n += strlen(SECTION_BAR);
