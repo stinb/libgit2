@@ -101,12 +101,6 @@ struct git_submodule {
 	git_oid wd_oid;
 };
 
-/* Force revalidation of submodule data cache (alloc as needed) */
-extern int git_submodule_cache_refresh(git_repository *repo);
-
-/* Release all submodules */
-extern void git_submodule_cache_free(git_repository *repo);
-
 /* Additional flags on top of public GIT_SUBMODULE_STATUS values */
 enum {
 	GIT_SUBMODULE_STATUS__WD_SCANNED          = (1u << 20),
@@ -121,10 +115,6 @@ enum {
 
 #define GIT_SUBMODULE_STATUS__CLEAR_INTERNAL(S) \
 	((S) & ~(0xFFFFFFFFu << 20))
-
-/* Internal lookup does not attempt to refresh cached data */
-extern int git_submodule__lookup(
-	git_submodule **out, git_repository *repo, const char *path);
 
 /* Internal status fn returns status and optionally the various OIDs */
 extern int git_submodule__status(
