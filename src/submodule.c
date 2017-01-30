@@ -1721,10 +1721,9 @@ int git_submodule_location(unsigned int *location, git_submodule *sm)
 static int submodule_alloc(
 	git_submodule **out, git_repository *repo, const char *name)
 {
-	size_t namelen;
 	git_submodule *sm;
 
-	if (!name || !(namelen = strlen(name))) {
+	if (!name || !strlen(name)) {
 		git_error_set(GIT_ERROR_SUBMODULE, "invalid submodule name");
 		return -1;
 	}
