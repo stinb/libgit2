@@ -474,6 +474,11 @@ typedef int GIT_CALLBACK(git_push_negotiation)(const git_push_update **updates, 
 typedef int GIT_CALLBACK(git_push_update_reference_cb)(const char *refname, const char *status, void *data);
 
 /**
+ * Callback to generate a custom URL.
+ */
+typedef int (*git_url_cb)(git_buf *out, git_remote *remote, git_direction direction, void *payload);
+
+/**
  * The callback settings structure
  *
  * Set the callbacks to be called by the remote when informing the user
@@ -555,6 +560,11 @@ struct git_remote_callbacks {
 	 * to auto-detect.
 	 */
 	git_transport_cb transport;
+
+	/**
+	 * Get the URL for this operation. Leave empty to auto-detect.
+	 */
+	git_url_cb url;
 
 	/**
 	 * This will be passed to each of the callbacks in this struct

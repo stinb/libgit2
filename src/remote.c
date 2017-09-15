@@ -707,12 +707,13 @@ static int set_transport_custom_headers(git_transport *t, const git_strarray *cu
 int git_remote__connect(git_remote *remote, git_direction direction, const git_remote_callbacks *callbacks, const git_remote_connection_opts *conn)
 {
 	git_transport *t;
-	const char *url;
+	git_buf url = GIT_BUF_INIT;
 	int flags = GIT_TRANSPORTFLAGS_NONE;
 	int error;
 	void *payload = NULL;
 	git_cred_acquire_cb credentials = NULL;
 	git_transport_cb transport = NULL;
+	git_url_cb url_cb = NULL;
 
 	assert(remote);
 
@@ -720,50 +721,61 @@ int git_remote__connect(git_remote *remote, git_direction direction, const git_r
 		GIT_ERROR_CHECK_VERSION(callbacks, GIT_REMOTE_CALLBACKS_VERSION, "git_remote_callbacks");
 		credentials = callbacks->credentials;
 		transport   = callbacks->transport;
+		url_cb      = callbacks->url;
 		payload     = callbacks->payload;
 	}
 
 	if (conn->proxy)
 		GIT_ERROR_CHECK_VERSION(conn->proxy, GIT_PROXY_OPTIONS_VERSION, "git_proxy_options");
 
-	t = remote->transport;
+	/* Look up URL. */
+	if (url_cb && (error = url_cb(&url, remote, direction, payload) < 0))
+		goto cleanup;
 
-	url = git_remote__urlfordirection(remote, direction);
-	if (url == NULL) {
+	if (git_buf_len(&url) == 0)
+		git_buf_sets(&url, git_remote__urlfordirection(remote, direction));
+
+	if (git_buf_len(&url) == 0) {
 		git_error_set(GIT_ERROR_INVALID,
 			"Malformed remote '%s' - missing %s URL",
 			remote->name ? remote->name : "(anonymous)",
 			direction == GIT_DIRECTION_FETCH ? "fetch" : "push");
-		return -1;
+		error = -1;
+		goto cleanup;
 	}
+
+	/* Look up transport. */
+	t = remote->transport;
 
 	/* If we don't have a transport object yet, and the caller specified a
 	 * custom transport factory, use that */
 	if (!t && transport &&
 		(error = transport(&t, remote, payload)) < 0)
-		return error;
+		goto cleanup;
 
 	/* If we still don't have a transport, then use the global
 	 * transport registrations which map URI schemes to transport factories */
-	if (!t && (error = git_transport_new(&t, remote, url)) < 0)
-		return error;
+	if (!t && (error = git_transport_new(&t, remote, git_buf_cstr(&url))) < 0)
+		goto cleanup;
 
 	if ((error = set_transport_custom_headers(t, conn->custom_headers)) != 0)
-		goto on_error;
+		goto cleanup;
 
 	if ((error = set_transport_callbacks(t, callbacks)) < 0 ||
-	    (error = t->connect(t, url, credentials, payload, conn->proxy, direction, flags)) != 0)
-		goto on_error;
+	    (error = t->connect(t, git_buf_cstr(&url), credentials, payload, conn->proxy, direction, flags)) != 0)
+		goto cleanup;
 
 	remote->transport = t;
 
-	return 0;
+cleanup:
+	if (error && t) {
+		t->free(t);
 
-on_error:
-	t->free(t);
+		if (t == remote->transport)
+			remote->transport = NULL;
+	}
 
-	if (t == remote->transport)
-		remote->transport = NULL;
+	git_buf_dispose(&url);
 
 	return error;
 }
