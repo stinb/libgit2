@@ -2544,6 +2544,7 @@ int git_repository_hashfile(
 	git_file fd = -1;
 	git_off_t len;
 	git_buf full_path = GIT_BUF_INIT;
+	struct stat st;
 
 	assert(out && path && repo); /* as_path can be NULL */
 
@@ -2557,6 +2558,11 @@ int git_repository_hashfile(
 	if (error < 0)
 		return error;
 
+	if (!p_lstat(full_path.ptr, &st) && S_ISLNK(st.st_mode)) {
+		error = git_odb__hashlink(out, full_path.ptr);
+		goto cleanup;
+	}
+
 	if (!as_path)
 		as_path = path;
 
@@ -2566,7 +2572,7 @@ int git_repository_hashfile(
 			&fl, repo, NULL, as_path,
 			GIT_FILTER_TO_ODB, GIT_FILTER_DEFAULT);
 		if (error < 0)
-			return error;
+			goto cleanup;
 	} else {
 		error = 0;
 	}
