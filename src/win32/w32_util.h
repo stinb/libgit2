@@ -149,6 +149,7 @@ GIT_INLINE(int) git_win32__file_attribute_to_stat(
 		attrdata->ftLastAccessTime,
 		attrdata->ftLastWriteTime);
 
+#if 0
 	if (attrdata->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT && path) {
 		git_win32_path target;
 
@@ -163,6 +164,7 @@ GIT_INLINE(int) git_win32__file_attribute_to_stat(
 			}
 		}
 	}
+#endif
 
 	return 0;
 }
