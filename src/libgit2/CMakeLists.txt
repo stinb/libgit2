@@ -116,6 +116,8 @@ configure_file(config.cmake.in
 	"${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake"
 	@ONLY)
 
+return()
+
 install(FILES
 	"${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake"
 	"${PROJECT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake"
